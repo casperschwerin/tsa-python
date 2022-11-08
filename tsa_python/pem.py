@@ -104,9 +104,12 @@ def pem(C_guess, A_guess, data, plot=False, free_C=None, free_A=None, verbose=Fa
         C (list): Nominator polynomial, starting with 1
         A (list): Denominator polynomial, starting with 1 
         data (np.array): Data array of shape (1, N_samples). Each sample is in the "horizontal" dimension of the vector.
-        plot (bool): True if you want to plot basic analysis of residuals. Defaults to False.
-        free_C (np.array): What parts of C you want free. The non free parts are assumed to be zero. Defaults to None.
-        free_A (np.array): What parts of A tou want free. The non free parts are assumed to be zero. Defaults to None.
+        plot (bool, optional): True if you want to plot basic analysis of residuals. Defaults to False.
+        free_C (np.array, optional): A mask (one dimensional array with booleans) determining which parts of C are free. The non free parts are assumed to be zero. Defaults to None.
+        free_A (np.array, optional): A mask (one dimensional array with booleans) determining which parts of A are free. Defaults to None.
+        verbose (bool, optional): True if you want printouts from pem
+        step_size (float, optional): Step size of the initial gradient descent. If the pem does not work for your data, you may try a smaller step size.
+        gradient_norm_stop (float, optional): When the norm of the gradient is smaller than this number, the gradient descent stops.
     """
     assert A_guess[0] == 1, "First element of A polynomial must be one"
     assert C_guess[0] == 1, "First element of C polynomial must be one"
@@ -150,11 +153,13 @@ def pem(C_guess, A_guess, data, plot=False, free_C=None, free_A=None, verbose=Fa
             print(f"loss at iteration {i}: {loss}")
 
         if la.norm(gradient) < gradient_norm_stop: 
-            print(f"norm of gradient is lower than {gradient_norm_stop}. exiting.")
+            if verbose:
+                print(f"norm of gradient is lower than {gradient_norm_stop}. exiting.")
             break
         
         if loss > last_loss:
-            print("loss getting higher. exiting")
+            if verbose:
+                print("loss getting higher. exiting")
             break
         last_loss = loss
         theta = theta - step_size*gradient
@@ -192,33 +197,3 @@ def pem(C_guess, A_guess, data, plot=False, free_C=None, free_A=None, verbose=Fa
     # print(f"A: {A}")
     A_out, C_out = theta_to_AC(theta_out, A_guess, C_guess, free_A=free_A, free_C=free_C)
     return C_out, A_out, res_out
-
-    
-
-if __name__ == "__main__":
-    mean = 0
-    std = 1 
-    num_samples = 10000
-    samples = np.random.normal(mean, std, size=num_samples)
-    
-    samples = samples[9000:]
-    samples = np.expand_dims(samples, axis=0)
-
-    A = np.array([1, 0, -0.5, 0.5])
-    C = np.array([1, 0.5])
-   
-    filtered_samples = s.lfilter(C, A, samples, axis=1)
-
-    A_guess = np.array([1, 0, 0, 0])
-    C_guess = np.array([1, 0])
-    
-    free_C = C != 0
-    free_A = A != 0
-
-    tic = time.time()
-    C_est, A_est, res = pem(C_guess, A_guess, filtered_samples, plot=True, free_A=free_A, free_C=free_C, verbose=False)
-    print(f"C estimation: \t {C_est}")
-    print(f"A estimation: \t {A_est}")
-    toc = time.time()
-    print(f"time elapsed: {toc - tic}")
-    

@@ -17,3 +17,6 @@ In the newly created directory, there is a bin-folder. Among other things, this 
 Navigate to the root of this project and type `pip install -r requirements.txt` followed by `pip install --editable .`.
 
 Now, when you're in this virtual environment you can always import files from this repo, where ever you are on the computer.
+
+## Contributing
+Read the `contributing.md` file before pushing code.
